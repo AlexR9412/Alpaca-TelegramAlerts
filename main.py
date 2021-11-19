@@ -5,7 +5,7 @@ import time
 import schedule
 import datetime
 
-socket = config.SOCKET_DISCORD
+socket = config.ALPACA_WEBHOOK
 price =''
 lastPrice =''
 bot_token = config.TOKEN_TEL_BOT
@@ -64,10 +64,11 @@ def on_message(ws, message):
     messageJ = json.loads(message)
     print(messageJ)
     #print("this is the close price of " + messageJ[0]["S"])
+    stockSymb = messageJ[0]["S"]
     priceN = messageJ[0]["c"]
     priceN = float(priceN)
     #print(priceN)
-    getStock(priceN)
+    getStock(priceN, stockSymb)
 
 def on_error(ws, error):
     print(error)
@@ -75,9 +76,11 @@ def on_error(ws, error):
 def on_close(ws):
     print("closed connection")
 
-def getStock(price):
+def getStock(price, stock):
      for dic in alertList:
         try:
+            if stock != dic["Ticker"]:
+                return
             if dic["LastPrice"] == 0: 
                 dic["LastPrice"] = price
             lastPrice = dic["LastPrice"]
