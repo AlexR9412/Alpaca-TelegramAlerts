@@ -5,6 +5,8 @@ import time
 import schedule
 import datetime
 
+#TEEEEST
+
 socket = config.ALPACA_WEBHOOK
 price =''
 lastPrice =''
