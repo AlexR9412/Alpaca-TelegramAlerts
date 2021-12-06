@@ -1,19 +1,21 @@
-import config
+import config, threading
 import websocket, json
 import requests
 import time
-import schedule
-import datetime
+from alpaca_trade_api.stream import Stream
+from alpaca_trade_api.common import URL
 
-#TEEEEST
-
-socket = config.ALPACA_WEBHOOK
+#conn = tradeapi.stream2.StreamConn(config.API_KEY, config.SECRET_KEY, config.ALPACA_WEBHOOK)
+conn = Stream(config.API_KEY,
+                  config.SECRET_KEY,
+                  base_url=URL(config.ALPACA_WEBHOOK),
+                  data_feed='iex')
 price =''
 lastPrice =''
 bot_token = config.TOKEN_TEL_BOT
 bot_chatID = config.TEL_CHAT_AL
 #bot_chatID = config.TEL_CHAT_LE
-timetest=time.time()
+
 alertList=[{
     "Ticker": 'AAPL',
     "Support": 143.200,
@@ -46,37 +48,12 @@ alertList=[{
     "SwingTargetTriggerU": time.time()-10000
 }]
 
-def on_open(ws):
-    print("opened")
-    
-    auth_data = {
-        "action": "auth",
-        "key": config.API_KEY, 
-        "secret": config.SECRET_KEY
-    }
+@conn.on(r'^AM.AAPL$')
+async def on_minute_bars(conn, channel, bar):
+    print('bars', bar)
 
-    ws.send(json.dumps(auth_data))
-
-    listen_message = {"action": "subscribe", "bars": [alertList[0]["Ticker"], alertList[1]["Ticker"]]}
-
-    ws.send(json.dumps(listen_message))
-
-def on_message(ws, message):
-    print("received a message")
-    messageJ = json.loads(message)
-    print(messageJ)
-    #print("this is the close price of " + messageJ[0]["S"])
-    stockSymb = messageJ[0]["S"]
-    priceN = messageJ[0]["c"]
-    priceN = float(priceN)
-    #print(priceN)
-    getStock(priceN, stockSymb)
-
-def on_error(ws, error):
-    print(error)
-
-def on_close(ws):
-    print("closed connection")
+def ws_start():
+	conn.run(['AM.AAPL'])
 
 def getStock(price, stock):
      for dic in alertList:
@@ -121,5 +98,6 @@ def getStock(price, stock):
         except Exception as e:
             print("OS error: {0}".format(e))
 
-ws = websocket.WebSocketApp(socket, on_open=on_open, on_message=on_message, on_error=on_error, on_close=on_close)
-ws.run_forever()
+#start WebSocket in a thread
+ws_thread = threading.Thread(target=ws_start, daemon=True)
+ws_thread.start()
