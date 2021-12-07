@@ -128,17 +128,21 @@ def checkAlerts(symbol, closePrice, volume):
 
 def init():
     new_thread(1)
+
     #time.sleep(XX)
     # die Fukntion watch() soll erst nach einer gewissen Zeit gestartet werden
     #new_thread(2)
     
-watchlist = ["AAPL",
-             "UBER",
-             "INTC",
-             "VALE",
-             "AMZN",
-             "MSFT",
-             "TWTR"]
+
+
+def getWatchList():
+    tickers = ''
+    for dic in alertList:
+        tickers = tickers + dic["Ticker"]
+    print(tickers)
+    return tickers
+    
+watchlist = ["GM", "AAPL"]
 
 socket = "wss://stream.data.alpaca.markets/v2/iex"
 ws = websocket.WebSocketApp(socket, on_open=on_open, on_message=on_message, on_close=on_close)
